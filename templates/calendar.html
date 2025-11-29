@@ -3,27 +3,43 @@
 <head>
   <meta charset="utf-8">
   <title>Nurse Scheduler Calendar</title>
-  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css' rel='stylesheet' />
-  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js'></script>
+
+  <!-- FullCalendar CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+
+  <!-- FullCalendar JS -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
   <style>
     body { font-family: Arial; margin: 20px; }
-    #calendar { max-width: 1000px; margin: 0 auto; }
+    #calendar { max-width: 1100px; margin: 0 auto; }
   </style>
 </head>
 <body>
+
   <h1>Nurse Scheduler – Calendar</h1>
-  <p>Click any date to add a mock shift.</p>
+  <p>Click a date to add a mock shift.</p>
+
   <div id="calendar"></div>
+
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      var calendarEl = document.getElementById('calendar');
-      var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
+    document.addEventListener("DOMContentLoaded", function() {
+      const calendarEl = document.getElementById("calendar");
+
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "dayGridMonth",
         selectable: true,
+
         dateClick: function(info) {
-          let title = prompt("Shift (e.g., LD - Alice):", "LD - ");
+          let title = prompt("Enter shift (e.g., LD - John):", "LD - ");
           if (!title) return;
-          let event = { title: title, start: info.dateStr, allDay: true };
+
+          let event = {
+            title: title,
+            start: info.dateStr,
+            allDay: true
+          };
+
           fetch("/api/events", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -35,30 +51,32 @@
             calendar.addEvent(event);
           });
         },
+
         eventClick: function(info) {
           if (confirm("Delete this shift?")) {
             fetch("/api/events/" + info.event.id, { method: "DELETE" })
-            .then(r => r.json())
-            .then(() => info.event.remove());
+              .then(() => info.event.remove());
           }
         },
-        events: function(fetchInfo, success, fail) {
+
+        events: function(fetchInfo, successCallback) {
           Promise.all([
             fetch("/api/important_dates").then(r => r.json()),
             fetch("/api/events").then(r => r.json())
           ])
           .then(([important, events]) => {
             let items = [];
+
             important.forEach(d => {
               items.push({
                 title: d.title,
                 start: d.date,
                 allDay: true,
-                backgroundColor: "#ff6961",
-                borderColor: "#ff6961",
-                display: "background"
+                display: "background",
+                backgroundColor: "#ffb3b3"
               });
             });
+
             events.forEach(e => {
               items.push({
                 id: e.id,
@@ -66,15 +84,18 @@
                 start: e.start,
                 allDay: e.allDay,
                 backgroundColor: "#3a87ad",
-                borderColor: "#3a87ad"
+                borderColor: "#1a5f85"
               });
             });
-            success(items);
+
+            successCallback(items);
           });
         }
       });
+
       calendar.render();
     });
   </script>
+
 </body>
 </html>
